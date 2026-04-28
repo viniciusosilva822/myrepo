@@ -1,0 +1,24 @@
+{
+  "name": "plataforma-quantica",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:generate": "pnpm --filter @plataforma/api prisma generate",
+    "db:migrate": "pnpm --filter @plataforma/api prisma migrate dev",
+    "db:push": "pnpm --filter @plataforma/api prisma db push",
+    "db:seed": "pnpm --filter @plataforma/api db:seed",
+    "db:studio": "pnpm --filter @plataforma/api prisma studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.3",
+    "typescript": "^5.6.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

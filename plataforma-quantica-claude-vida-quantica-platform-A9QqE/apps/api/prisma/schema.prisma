@@ -1,0 +1,340 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum AccessSource {
+  HOTMART
+  MANUAL
+  ADMIN
+}
+
+enum AccessStatus {
+  ACTIVE
+  CANCELLED
+  REFUNDED
+}
+
+enum ContentType {
+  EBOOK
+  AUDIO
+  VIDEO
+  ARTICLE
+}
+
+enum PostKind {
+  GRATIDAO
+  CONQUISTA
+  REFLEXAO
+}
+
+enum Reaction {
+  LUZ
+  AMOR
+  GRATIDAO
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(STUDENT)
+  birthDate    DateTime?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  access            Access?
+  checkins          Checkin[]
+  journalEntries    JournalEntry[]
+  habits            Habit[]
+  habitLogs         HabitLog[]
+  meditationLogs    MeditationLog[]
+  wheelEntries      WheelEntry[]
+  cardDraws         CardDraw[]
+  numerologyReports NumerologyReport[]
+  chakraResults     ChakraResult[]
+  eneagramResults   EneagramResult[]
+  badges            UserBadge[]
+  posts             Post[]
+  postReactions     PostReaction[]
+  liveAttendance    LiveAttendance[]
+
+  @@index([email])
+}
+
+model Access {
+  id          String       @id @default(cuid())
+  userId      String       @unique
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source      AccessSource
+  status      AccessStatus @default(ACTIVE)
+  externalId  String?
+  productCode String?
+  grantedAt   DateTime     @default(now())
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+
+  @@index([externalId])
+}
+
+model Checkin {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  frequency Int
+  mood      String
+  energy    Int
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+  @@index([userId, createdAt])
+}
+
+model JournalPrompt {
+  id        String   @id @default(cuid())
+  text      String
+  category  String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  entries JournalEntry[]
+}
+
+model JournalEntry {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promptId  String?
+  prompt    JournalPrompt? @relation(fields: [promptId], references: [id])
+  content   String
+  mood      String?
+  createdAt DateTime       @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Habit {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  icon          String?
+  color         String?
+  targetPerWeek Int      @default(7)
+  archived      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  logs HabitLog[]
+
+  @@index([userId])
+}
+
+model HabitLog {
+  id      String   @id @default(cuid())
+  habitId String
+  habit   Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date    DateTime @db.Date
+
+  @@unique([habitId, date])
+  @@index([userId, date])
+}
+
+model Meditation {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  audioUrl     String
+  thumbnailUrl String?
+  category     String
+  durationSec  Int
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  logs MeditationLog[]
+}
+
+model MeditationLog {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  meditationId String?
+  meditation   Meditation? @relation(fields: [meditationId], references: [id])
+  durationSec  Int
+  category     String?
+  createdAt    DateTime    @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model WheelEntry {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  saude           Int
+  carreira        Int
+  financas        Int
+  relacionamentos Int
+  familia         Int
+  espiritualidade Int
+  lazer           Int
+  desenvolvimento Int
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model CardDraw {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  cardId    String
+  cardName  String
+  meaning   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+}
+
+model NumerologyReport {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName     String
+  birthDate    DateTime
+  lifePath     Int
+  destiny      Int
+  soulUrge     Int
+  personality  Int
+  payload      Json
+  createdAt    DateTime @default(now())
+}
+
+model ChakraResult {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scores    Json
+  weakest   String
+  strongest String
+  createdAt DateTime @default(now())
+}
+
+model EneagramResult {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topType   Int
+  scores    Json
+  createdAt DateTime @default(now())
+}
+
+model Mantra {
+  id        String   @id @default(cuid())
+  text      String
+  author    String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Content {
+  id           String      @id @default(cuid())
+  title        String
+  description  String?
+  type         ContentType
+  url          String
+  thumbnailUrl String?
+  category     String?
+  durationSec  Int?
+  isFeatured   Boolean     @default(false)
+  published    Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+}
+
+model Live {
+  id           String           @id @default(cuid())
+  title        String
+  description  String?
+  scheduledAt  DateTime
+  recordingUrl String?
+  joinUrl      String?
+  createdAt    DateTime         @default(now())
+
+  attendance LiveAttendance[]
+}
+
+model LiveAttendance {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  liveId String
+  live   Live   @relation(fields: [liveId], references: [id], onDelete: Cascade)
+  rsvp   Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, liveId])
+}
+
+model Post {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      PostKind
+  content   String
+  createdAt DateTime       @default(now())
+
+  reactions PostReaction[]
+
+  @@index([createdAt])
+}
+
+model PostReaction {
+  id       String   @id @default(cuid())
+  postId   String
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reaction Reaction
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId, reaction])
+}
+
+model Badge {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String
+  icon        String
+  xp          Int      @default(50)
+  createdAt   DateTime @default(now())
+
+  users UserBadge[]
+}
+
+model UserBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId  String
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  earnedAt DateTime @default(now())
+
+  @@unique([userId, badgeId])
+}
